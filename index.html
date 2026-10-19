@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Quantum Stepper</title>
+  <meta name="description" content="Step through quantum algorithms gate by gate, with the circuit, geometry, amplitudes and math in sync.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="intro">
+      <div class="brand">Quantum Stepper</div>
+      <h1><span id="title"></span><em id="headline"></em></h1>
+      <p class="lede" id="intro"></p>
+    </div>
+    <div class="config">
+      <div class="field"><label for="selAlgo">Algorithm</label><select id="selAlgo"></select></div>
+      <div class="config" id="params"></div>
+    </div>
+  </header>
+
+  <section class="bench" aria-label="Circuit timeline">
+    <div class="circuit-wrap"><svg id="circuit" role="img" aria-label="Circuit; click a gate to play it"></svg></div>
+    <div class="transport">
+      <div class="btns">
+        <button class="btn" id="bRestart" aria-label="Restart"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+        <button class="btn" id="bPrev" aria-label="Previous gate"><svg viewBox="0 0 16 16"><path d="M13 2v12L4 8zM2 2h2v12H2z"/></svg></button>
+        <button class="btn primary" id="bPlay" aria-label="Play"><svg viewBox="0 0 16 16" id="playIcon"><path d="M4 2l10 6-10 6z"/></svg></button>
+        <button class="btn" id="bNext" aria-label="Next gate"><svg viewBox="0 0 16 16"><path d="M3 2v12l9-6zM12 2h2v12h-2z"/></svg></button>
+      </div>
+      <input type="range" id="scrub" min="0" max="1" step="0.001" value="0" aria-label="Timeline position">
+      <div class="readout" id="readout"></div>
+    </div>
+  </section>
+
+  <div class="stage">
+    <figure class="panel" id="sceneMainPanel"><div id="sceneMain"></div></figure>
+    <figure class="panel">
+      <div class="ph-head"><h3 id="barsTitle">Amplitudes</h3><span class="live" id="pwLive"></span></div>
+      <svg id="bars" viewBox="0 0 640 320" role="img" aria-label="Amplitude of each basis state"></svg>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--focus-c)"></i>focus state</span>
+        <span><i class="sw" style="background:var(--rest-c)"></i>every other state</span>
+        <span><i class="sw" style="background:var(--mirror)"></i>reflection mirror</span>
+        <span id="phLegend">dials on top: complex phase of each amplitude</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="lower">
+    <article class="panel math" id="math" aria-live="polite"></article>
+    <aside class="panel">
+      <div class="facts" id="facts"></div>
+      <div id="sceneSide"></div>
+      <p class="keys"><kbd>Space</kbd> play · <kbd>←</kbd> <kbd>→</kbd> step · hover a bar or a term to link them</p>
+    </aside>
+  </div>
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
