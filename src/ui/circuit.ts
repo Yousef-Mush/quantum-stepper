@@ -21,7 +21,7 @@ export class CircuitView {
     let h = '';
     for (let q = 0; q < n; q++) {
       h += `<line class="wire" x1="40" x2="${W - 8}" y1="${yq(q)}" y2="${yq(q)}"/>`;
-      h += `<text class="wlabel" x="4" y="${yq(q) + 4}">q${q} |0⟩</text>`;
+      h += `<text class="wlabel" x="4" y="${yq(q) + 4}">${built.wireLabels?.[q] ?? `q${q} |0⟩`}</text>`;
     }
     for (const b of brackets) {
       const xa = X0 + b.from * COL + 6, xb = X0 + (b.to + 1) * COL - 6;

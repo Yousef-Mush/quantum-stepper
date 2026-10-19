@@ -47,7 +47,7 @@ export function renderBars(svg: SVGSVGElement, ctx: FrameContext): BarsOutput {
         if (L > 0.4) h += `<line class="phv ${r}" x1="${cx(x)}" y1="${cy}" x2="${cx(x) + L * Math.cos(ang)}" y2="${cy - L * Math.sin(ang)}"/>`;
       }
     }
-    if (!ctx.atStart) {
+    if (!ctx.atStart && built.showMean !== false) {
       let mean = 0;
       for (let x = 0; x < N; x++) mean += state.re[x];
       mean /= N;

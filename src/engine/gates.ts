@@ -1,4 +1,4 @@
-import { fractionalPower, type Mat2 } from './fractional';
+import { MATRICES, fractionalPower, type Mat2 } from './fractional';
 import { cloneState, dimension, inner, type StateVector } from './state';
 
 /** How a gate is drawn on the circuit timeline. */
@@ -108,11 +108,50 @@ export function reflectAbout(name: string, symbol: string, v: StateVector, durat
   };
 }
 
+/**
+ * Bit oracle U_f |x>|y> = |x>|y XOR f(x)>, where x is read from every qubit
+ * except `target` (most significant first) and y is the target qubit.
+ * U_f is a reflection (U_f^2 = I) that applies X to y wherever f(x) = 1, so
+ * U_f^t applies X^t there: |x>|-> picks up e^{i pi f(x) t} (phase kickback)
+ * while |x>|+> is left alone.
+ */
+export function xorOracle(name: string, symbol: string, n: number, target: number, f: (x: number) => number, duration = 1.6): Gate {
+  const N = dimension(n);
+  const tMask = 1 << (n - 1 - target);
+  const flip = new Uint8Array(N);
+  for (let i = 0; i < N; i++) {
+    if (i & tMask) continue;
+    // Drop the target bit to get x over the remaining qubits.
+    const low = i & (tMask - 1);
+    const x = ((i >> 1) & ~(tMask - 1)) | low;
+    flip[i] = f(x) ? 1 : 0;
+  }
+  return {
+    name, duration,
+    glyph: { kind: 'block', symbol, qubits: allQubits(n), tone: 'focus' },
+    apply(state, t) {
+      const s = cloneState(state);
+      if (t <= 0) return s;
+      const [a, b, cc, d] = fractionalPower(MATRICES.X, t);
+      for (let i = 0; i < N; i++) {
+        if (!flip[i]) continue;
+        const j = i | tMask;
+        const xr = s.re[i], xi = s.im[i], yr = s.re[j], yi = s.im[j];
+        s.re[i] = a.re * xr - a.im * xi + b.re * yr - b.im * yi;
+        s.im[i] = a.re * xi + a.im * xr + b.re * yi + b.im * yr;
+        s.re[j] = cc.re * xr - cc.im * xi + d.re * yr - d.im * yi;
+        s.im[j] = cc.re * xi + cc.im * xr + d.re * yi + d.im * yr;
+      }
+      return s;
+    },
+  };
+}
+
 /** Measurement in the computational basis. Leaves the state untouched; views sample shots from it. */
-export function measurement(n: number, duration = 3.2): Gate {
+export function measurement(n: number, duration = 3.2, qubits = allQubits(n)): Gate {
   return {
     name: 'Measure', duration,
-    glyph: { kind: 'measure', symbol: 'M', qubits: allQubits(n), tone: 'neutral' },
+    glyph: { kind: 'measure', symbol: 'M', qubits, tone: 'neutral' },
     apply: state => cloneState(state),
   };
 }
