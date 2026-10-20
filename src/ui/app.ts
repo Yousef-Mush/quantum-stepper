@@ -74,6 +74,8 @@ export function startApp(algorithms: AnyAlgorithm[]): void {
     circuit.build(built);
     mountScenes();
     renderFacts();
+    $('accentLabel').textContent = built.accentLabel ?? '';
+    $('accentLegend').hidden = !built.accentLabel;
     math.reset();
   }
 

@@ -88,6 +88,8 @@ export interface BuiltAlgorithm {
   startAt?: number;
   /** Circuit wire labels, one per qubit. Default "q0 |0⟩", "q1 |0⟩", … */
   wireLabels?: string[];
+  /** Legend label for the amber accent colour in this algorithm's scenes. Omitted hides that legend entry. */
+  accentLabel?: string;
   /** Draw the mean amplitude on the bars (meaningful for Grover's diffusion). Default true. */
   showMean?: boolean;
 }
