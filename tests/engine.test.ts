@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MATRICES, basisState, fractionalPower, layer, markOracle, norm, probability, reflectAbout,
-  sampleShots, uniformState, type Mat2, type StateVector,
+  sampleShots, uniformState, xorOracle, type Mat2, type StateVector,
 } from '../src/engine';
 
 const EPS = 1e-10;
@@ -95,6 +95,33 @@ describe('gates', () => {
     mean /= 8;
     const s1 = reflectAbout('D', 'D', uniformState(3)).apply(s0, 1);
     for (let x = 0; x < 8; x++) expect(s1.re[x]).toBeCloseTo(2 * mean - s0.re[x], 12);
+  });
+
+  it('a layer on a qubit subset leaves the other qubits alone: X on the last qubit maps |000> to |001>', () => {
+    expectStateClose(layer('X', 'X', MATRICES.X, 3, [2]).apply(basisState(3, 0), 1), basisState(3, 1));
+  });
+
+  it('the XOR oracle maps |x>|y> to |x>|y xor f(x)>, with the target anywhere', () => {
+    const f = (x: number) => (x === 1 || x === 2 ? 1 : 0);
+    // Target last: index = 2x + y.
+    const last = xorOracle('U', 'U', 3, 2, f);
+    for (let x = 0; x < 4; x++) for (let y = 0; y < 2; y++) {
+      expectStateClose(last.apply(basisState(3, 2 * x + y), 1), basisState(3, 2 * x + (y ^ f(x))));
+    }
+    // Target in the middle: x is qubit 0 then qubit 2.
+    const mid = xorOracle('U', 'U', 3, 1, f);
+    for (let i = 0; i < 8; i++) {
+      const x = ((i >> 2) << 1) | (i & 1);
+      expectStateClose(mid.apply(basisState(3, i), 1), basisState(3, i ^ (f(x) << 1)));
+    }
+  });
+
+  it('the XOR oracle is a reflection: unitary along its path, U^0.3 U^0.7 = U, U^2 = I', () => {
+    const U = xorOracle('U', 'U', 3, 2, x => x & 1);
+    const s0 = layer('H', 'H', MATRICES.H, 3).apply(basisState(3, 1), 1);
+    for (const t of [0.2, 0.5, 0.8]) expect(Math.abs(norm(U.apply(s0, t)) - 1)).toBeLessThan(EPS);
+    expectStateClose(U.apply(U.apply(s0, 0.3), 0.7), U.apply(s0, 1));
+    expectStateClose(U.apply(U.apply(s0, 1), 1), s0);
   });
 
   it('gates never mutate their input', () => {

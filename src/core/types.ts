@@ -86,6 +86,10 @@ export interface BuiltAlgorithm {
   seed: number;
   /** Position the player opens at. */
   startAt?: number;
+  /** Circuit wire labels, one per qubit. Default "q0 |0⟩", "q1 |0⟩", … */
+  wireLabels?: string[];
+  /** Draw the mean amplitude on the bars (meaningful for Grover's diffusion). Default true. */
+  showMean?: boolean;
 }
 
 export interface ParamOption { value: number; label: string }
