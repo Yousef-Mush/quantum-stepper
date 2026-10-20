@@ -214,6 +214,7 @@ export const deutschJozsa: AlgorithmDefinition<DeutschJozsaParams> = {
       startAt: STEP.ORACLE,
       wireLabels: [...inputs.map(q => `x${q} |0⟩`), 'y |0⟩'],
       showMean: false,
+      accentLabel: 'f(x) = 1, phase kicked by the oracle',
     };
   },
 };

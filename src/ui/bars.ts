@@ -6,19 +6,35 @@ const W = 640, H = 320, ML = 42, MR = 14;
 export interface BarsOutput { title: string; live: string; showPhaseLegend: boolean }
 
 /**
+ * Index of basis state x among the outcomes of measuring only `qubits`
+ * (qubit q is bit n-1-q of x; the first listed qubit is the most significant).
+ */
+export function measuredOutcome(x: number, qubits: number[], n: number): number {
+  let k = 0;
+  for (const q of qubits) k = (k << 1) | ((x >> (n - 1 - q)) & 1);
+  return k;
+}
+
+/**
  * Amplitude view. Before measurement: signed real parts as bars, complex phase
  * as dials, the mean as a dashed line, and the pre-gate amplitudes as ghosts.
  * During measurement: sampled frequencies against exact |a|^2 outlines.
  */
 export function renderBars(svg: SVGSVGElement, ctx: FrameContext): BarsOutput {
   const { built, state } = ctx;
-  const N = state.re.length, n = built.n;
   const measuring = ctx.shots !== null;
+  // While measuring, one bar per outcome of the measured qubits; unmeasured qubits are summed over.
+  const qubits = measuring ? ctx.step.gate.glyph.qubits : [...Array(built.n).keys()];
+  const n = qubits.length, N = 1 << n;
+  const outcome = (x: number) => measuredOutcome(x, qubits, built.n);
+  const members: number[][] = Array.from({ length: N }, () => []);
+  for (let x = 0; x < state.re.length; x++) members[outcome(x)].push(x);
   const showPh = !measuring && N <= 16;
   const top = showPh ? 58 : 20, bottom = N > 16 ? 56 : 34;
   const pH = H - top - bottom, pW = W - ML - MR, slot = pW / N, bw = Math.min(slot * 0.62, 46);
   const cx = (x: number) => ML + (x + 0.5) * slot;
-  const role = (x: number) => built.role(x);
+  const role = (k: number) => built.role(members[k][0]);
+  const prob = (k: number) => members[k].reduce((sum, x) => sum + probability(state, x), 0);
   let h = '';
 
   if (!measuring) {
@@ -62,9 +78,10 @@ export function renderBars(svg: SVGSVGElement, ctx: FrameContext): BarsOutput {
       h += `<text class="ax" x="${ML - 6}" y="${y(g) + 3}" text-anchor="end">${g}</text>`;
     }
     const { shown, total, outcomes } = ctx.shots!;
-    const counts = histogram(outcomes, shown, N);
+    const counts = histogram(outcomes, shown, state.re.length);
     for (let x = 0; x < N; x++) {
-      const r = role(x), p = probability(state, x), f = shown ? counts[x] / shown : 0;
+      const hits = members[x].reduce((sum, i) => sum + counts[i], 0);
+      const r = role(x), p = prob(x), f = shown ? hits / shown : 0;
       h += `<rect class="bar ${r}" data-link="${r}" x="${cx(x) - bw / 2}" y="${y(f)}" width="${bw}" height="${Math.max(0.75, y(0) - y(f))}" rx="1.5"/>`;
       h += `<rect class="exact" x="${cx(x) - bw / 2 - 3}" y="${y(p)}" width="${bw + 6}" height="${Math.max(0.5, y(0) - y(p))}"/>`;
     }
@@ -79,7 +96,7 @@ export function renderBars(svg: SVGSVGElement, ctx: FrameContext): BarsOutput {
   svg.innerHTML = h;
 
   const focus = [...Array(N).keys()].filter(x => role(x) === 'focus');
-  const live = focus.length === 1 ? `P(${bitString(focus[0], n)}) = ${probability(state, focus[0]).toFixed(3)}` : '';
+  const live = focus.length === 1 ? `P(${bitString(focus[0], n)}) = ${prob(focus[0]).toFixed(3)}` : '';
   return {
     title: measuring ? 'Measurement · sampled frequency vs exact |a|²' : 'Amplitudes · real part, with phase dials',
     live,

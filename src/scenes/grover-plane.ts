@@ -21,6 +21,19 @@ export function projectToGroverPlane(s: StateVector, marked: number): { x: numbe
   return { x: rest / Math.sqrt(N - 1), y: s.re[marked] };
 }
 
+/**
+ * Squared length of the state's component inside the plane, using the full
+ * complex amplitudes: |<s'|psi>|^2 + |<w|psi>|^2. This is 1 exactly when the
+ * state lies in the plane, even mid-gate when the amplitudes are complex and
+ * the drawn (real-part) arrow is shorter.
+ */
+export function planeWeight(s: StateVector, marked: number): number {
+  const N = s.re.length;
+  let re = 0, im = 0;
+  for (let i = 0; i < N; i++) if (i !== marked) { re += s.re[i]; im += s.im[i]; }
+  return (re * re + im * im) / (N - 1) + s.re[marked] ** 2 + s.im[marked] ** 2;
+}
+
 function arcPath(r: number, a0: number, a1: number): string {
   const sweep = a1 > a0 ? 0 : 1;
   const large = Math.abs(a1 - a0) > Math.PI ? 1 : 0;
@@ -85,8 +98,10 @@ export function groverPlaneScene(g: GroverGeometry): Scene {
 
       return {
         live: len > 0.15 ? `φ = ${fmt((phi * 180) / Math.PI, 1)}°` : 'φ undefined',
-        caption: len < 0.98
+        caption: planeWeight(ctx.state, g.marked) < 0.98
           ? `The state’s shadow in this plane has length ${len.toFixed(2)}: part of it lies outside the plane. After the Hadamards it lands exactly on |s⟩ and never leaves.`
+          : len < 0.98
+          ? `Mid-reflection the state is still in the plane, but its amplitudes are partly imaginary. The arrow shows the real parts, so it shortens to ${len.toFixed(2)} and grows back as the reflection completes.`
           : `Each iteration adds 2θ = ${fmt((2 * g.theta * 180) / Math.PI, 1)}°, so after k iterations φ = (2k+1)θ. The dashed lines are the two components: the marked amplitude and the shared amplitude of the rest.`,
       };
     },

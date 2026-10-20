@@ -21,7 +21,7 @@ Step through quantum algorithms gate by gate. The circuit, the geometry, the amp
 ```bash
 npm install
 npm run dev        # local dev server
-npm test           # engine, algorithm and Qiskit cross-check tests
+npm test           # engine, algorithm, Qiskit cross-check and visual tests
 npm run build      # type-check and produce a static site in dist/
 ```
 
@@ -76,6 +76,15 @@ pip install qiskit
 npm run fixtures   # regenerate tests/fixtures/*.json
 npm test
 ```
+
+## Testing the visuals
+
+The scenes, bars and math notebook only write SVG or HTML strings, so the tests draw them in Node and read the picture back. They check the drawing against the mathematics, not against the drawing code:
+
+- **Math notebook** (`tests/math-panel.test.ts`): every number printed in the card equals the live state or its closed form, at frames all through each gate.
+- **Scenes** (`tests/scenes.test.ts`): the Grover arrow sits at (2k+1)θ after k iterations and moves in a straight line across the right mirror mid-reflection; the P(k) dot lands on the curve at whole k; the Deutsch–Jozsa resultant is the live amplitude, with one zoom factor for the whole step.
+- **Amplitudes** (`tests/bars.test.ts`): bar heights are real parts, dials point at the phase, and the histogram counts only the measured qubits.
+- **Playback** (`tests/player.test.ts`): next, previous, click-to-play and seek land on the right step boundaries.
 
 ## Adding an algorithm
 

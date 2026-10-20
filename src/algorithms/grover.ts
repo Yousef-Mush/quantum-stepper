@@ -154,6 +154,7 @@ export const grover: AlgorithmDefinition<GroverParams> = {
       ],
       narrate,
       scenes: [groverPlaneScene(geo), groverProbabilityScene(geo)],
+      accentLabel: 'reflection mirror',
       seed: 1234 + n * 97 + marked * 13 + iterations,
       startAt: 1,
     };
